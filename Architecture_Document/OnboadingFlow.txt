@@ -1,0 +1,25 @@
+title Onboarding flow diagram
+
+User -> Auth:Submit credential
+User <- Auth:Redirect back with Auth Token
+User -> Gateway: Post /api/customer/start-verification \n Authorization: Bearer Token
+Gateway -> Auth:Validate Token
+Gateway -> VerificationService:Process the request
+VerificationService -> VerificationRepo:Save the customer data
+VerificationRepo -> VerificationService:Receive entity with userId
+
+VerificationService -> IdempotecyRepo:Store the Idempotency key with User id
+
+VerificationService --> IdNowApiCall: Send with customer data
+IdNowApiCall -> IdNowMockService:Post api/v1/login\nRequest for AuthToken
+IdNowMockService -> IdNowApiCall:Receive Auth Token
+IdNowApiCall -> IdNowMockService: Post /api/v1/identifications/{transactionNumber}/start
+IdNowMockService -> IdNowApiCall:Receive the uniqueId (IdentId)
+IdNowApiCall -> VerificationService: Return verification url build using IdentId
+VerificationService -> User: Return the verification url
+User -> IdNowMockService:Redirect to verification url
+IdNowMockService -> WebhookController: status as Webhook response Call post /api/webhook/status
+WebhookController->WebhookService: Process the status payload
+WebhookService->WebhookRepo: Store result as Identid with status
+WebhookRepo->WebhookService:Return result
+WebhookService->WebhookController: return result
