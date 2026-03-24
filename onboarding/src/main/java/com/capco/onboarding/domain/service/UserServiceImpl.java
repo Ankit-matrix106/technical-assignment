@@ -24,6 +24,10 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public String createUser(UserVo user) {
 		
+		if (userRepository.existsByUsername(user.username())) {
+            return "Error: Username is already taken!";
+        }
+		
 		User u = User.builder().username(user.username())
 							   .password(passwordEncoder.encode(user.password()))
 							   .build();

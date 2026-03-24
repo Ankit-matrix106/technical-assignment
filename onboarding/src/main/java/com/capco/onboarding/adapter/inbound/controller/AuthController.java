@@ -26,6 +26,9 @@ public class AuthController {
     
     @Autowired
     PasswordEncoder encoder;
+	
+	@Autowired
+    UserService userService;
     
     @Autowired
     JwtUtil jwtUtils;
@@ -42,18 +45,20 @@ public class AuthController {
         return jwtUtils.generateToken(userDetails.getUsername());
     }
     
-    @PostMapping("/signup")
-    public String registerUser(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return "Error: Username is already taken!";
-        }
-        // Create new user's account
-        User newUser = new User(
-                null,
-                user.getUsername(),
-                encoder.encode(user.getPassword())
-        );
-        userRepository.save(newUser);
-        return "User registered successfully!";
+   @PostMapping("/signup")
+    public String registerUser(@RequestBody UserRequest userReq) {
+		        
+        UserVo user = new UserVo(userReq.username(), userReq.password());
+		return userService.createUser(user);
     }
+    
+    @GetMapping("/{id}")
+	public Optional<User> getUserById(@PathVariable("id") int id) {
+		return userService.getUserById(id);
+	}
+	
+	@GetMapping("/all")
+	public List<User> getAllUsers(){
+		return userService.getAllUsers();
+	}
 }
